@@ -17,6 +17,7 @@ const questionSchema = z.object({
 })
 const quizSchema = z.array(questionSchema)
 type quizType = z.infer<typeof quizSchema>
+type questionType = z.infer<typeof questionSchema>
 
 export const entriesRouter = createTRPCRouter({
 
@@ -43,19 +44,24 @@ export const entriesRouter = createTRPCRouter({
             return false;
         if(!ctx.entry)
             return false;
-        const rawQuestions = await ctx.db.select().from(Questions).leftJoin(EntriesToQuestions, eq(EntriesToQuestions.questionID, Questions.id)).where(eq(Questions.quizID, ctx.quiz.id))
-        const questions:quizType = []
+        const rawQuestions = await ctx.db.select().from(Questions).where(eq(Questions.quizID, ctx.quiz.id))
+        const questionsSet:Set<questionType> = new Set()
         await Promise.all(rawQuestions.map(async (value)=>{
-            if(value.EntriesToQuestions && value.EntriesToQuestions.entryID===ctx.entry!.id) return;
-            const answers = await ctx.db.select({id:Answers.id, value:Answers.value}).from(Answers).where(eq(Answers.questionID, value.Questions.id));
-            questions.push({
-                id: value.Questions.id,
-                question: value.Questions.question,
-                MaxTimeMs: value.Questions.MaxTimeMs,
-                MaxPoints: value.Questions.MaxPoints,
-                answers
-            })
+            const check = await ctx.db.select().from(EntriesToQuestions).where(eq(EntriesToQuestions.entryID, ctx.entry!.id))
+            console.log("🚀 ~ file: entries.ts:52 ~ awaitPromise.all ~ check:", check)
+            if(check.some((val)=>val.questionID===value.id)) return;
+            const answers = await ctx.db.select({id:Answers.id, value:Answers.value}).from(Answers).where(eq(Answers.questionID, value.id));
+            const question:questionType = {
+                id: value.id,
+                question: value.question,
+                MaxTimeMs: value.MaxTimeMs,
+                MaxPoints: value.MaxPoints,
+                answers,
+            }
+            if(questionsSet.has(question)) return
+            questionsSet.add(question)
         }))
+        const questions = [...questionsSet]
         if(questions.length === 0) return true;
         const questionIndex = randomInt(0, questions.length)
         const qst = questions.at(questionIndex) ?? questions.at(0)!
@@ -69,10 +75,10 @@ export const entriesRouter = createTRPCRouter({
             return false;
         if(!ctx.entry)
             return false;
-        const answers = (await ctx.db.select({id: Answers.id, correct: Answers.correct, maxPoints:Questions.MaxPoints, maxTimeMS:Questions.MaxTimeMs}).from(Questions).where(eq(Questions.id, input.questionID)).innerJoin(Answers, and(eq(Answers.questionID,input.questionID), eq(Answers.id, input.answerID))))[0]
-        if(!answers) return false
-        await ctx.db.update(Entries).set({score: ctx.entry.score+Math.round(answers.maxPoints*(1-Math.pow(input.timeMs/answers.maxTimeMS,2)))}).where(eq(Entries.id, ctx.entry.id))
         await ctx.db.insert(EntriesToQuestions).values({entryID:ctx.entry.id, questionID:input.questionID})
+        const answers = (await ctx.db.select({id: Answers.id, correct: Answers.correct, maxPoints:Questions.MaxPoints, maxTimeMS:Questions.MaxTimeMs}).from(Questions).where(eq(Questions.id, input.questionID)).innerJoin(Answers, and(eq(Answers.questionID,input.questionID), eq(Answers.id, input.answerID))))[0]
+        if(!answers || !answers.correct) return false
+        await ctx.db.update(Entries).set({score: ctx.entry.score+Math.round(answers.maxPoints*(1-Math.pow(input.timeMs/answers.maxTimeMS,2)))}).where(eq(Entries.id, ctx.entry.id))
         return true
     }),
     outOfTime: quizProcedure

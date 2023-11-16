@@ -8,6 +8,7 @@ import { api } from "~/trpc/server"
 
 export default function QuizPage() {
   const router = useRouter()
+  let lock = false
   const [time, setTime] = useState(Date.now())
   const [timeReaminin, setTimeRemaining] = useState(10000)
   const [question, setQuestion] = useState<{
@@ -63,8 +64,11 @@ export default function QuizPage() {
                 <div className="grid grid-rows-4 grid-flow-col gap-6 p-4 md:grid-rows-2">
                     {question.answers.map((value, index)=>{
                         return <button key={index} className="aspect-video bg-black bg-opacity-40 p-4 rounded-md sm:p-8" onClick={async()=>{
+                            if(lock) return
+                            lock=true
                             await api.enties.answer.mutate({answerID: value.id, questionID:question.id, timeMs:Date.now()-time})
                             await getQuestion()
+                            lock=false
                         }}>{value.value}</button>
                     })}
                 </div>
