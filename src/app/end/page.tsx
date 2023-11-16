@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/exhaustive-deps */
 const resoultCheme = z.object({quizname:z.string().min(1), score: z.number(), name:z.string().min(1), lastName:z.string().min(1), class:z.string().min(1)})
 type resoultType = z.infer<typeof resoultCheme>
 import { useRouter } from "next/navigation"
@@ -21,11 +22,12 @@ export default function ThankYouPage() {
     const timeout = setTimeout(()=>{
         router.push("/")
     }, 10000)
+    return ()=>clearTimeout(timeout)
   },
   [])
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-        <button className="fixed top-1 left-1 bg-black bg-opacity-30 p-3 rounded-md" onClick={async()=>{
+        <button className="fixed top-1 left-1 bg-black bg-opacity-30 p-3 rounded-md" onClick={()=>{
             router.push('/')
         }}>Wróć</button>
         {result ? <div>

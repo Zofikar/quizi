@@ -15,8 +15,6 @@ const questionSchema = z.object({
         value: z.string().min(1),
     }))
 })
-const quizSchema = z.array(questionSchema)
-type quizType = z.infer<typeof quizSchema>
 type questionType = z.infer<typeof questionSchema>
 
 export const entriesRouter = createTRPCRouter({
@@ -45,7 +43,7 @@ export const entriesRouter = createTRPCRouter({
         if(!ctx.entry)
             return false;
         const rawQuestions = await ctx.db.select().from(Questions).where(eq(Questions.quizID, ctx.quiz.id))
-        const questionsSet:Set<questionType> = new Set()
+        const questionsSet:Set<questionType> = new Set<questionType>()
         await Promise.all(rawQuestions.map(async (value)=>{
             const check = await ctx.db.select().from(EntriesToQuestions).where(eq(EntriesToQuestions.entryID, ctx.entry!.id))
             console.log("🚀 ~ file: entries.ts:52 ~ awaitPromise.all ~ check:", check)
