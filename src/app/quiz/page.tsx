@@ -6,6 +6,21 @@ import { toast } from "react-toastify"
 import MyToastCotainer from "~/Components/MyToastCotainer"
 import { api } from "~/trpc/server"
 
+function shuffle<T>(array: T[]){
+    let currentIndex = array.length,  randomIndex;
+  
+    while (currentIndex > 0) {
+  
+      randomIndex = Math.floor(Math.min(Math.random(), 0.99999) * currentIndex);
+      currentIndex--;
+  
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex]!, array[currentIndex]!];
+    }
+  
+    return array;
+}
+
 export default function QuizPage() {
   const router = useRouter()
   let lock = false
@@ -62,7 +77,7 @@ export default function QuizPage() {
                     {question.question}
                 </div>
                 <div className="grid grid-rows-4 grid-flow-col gap-6 p-4 md:grid-rows-2">
-                    {question.answers.map((value, index)=>{
+                    {shuffle(question.answers).map((value, index)=>{
                         return <button key={index} className="aspect-video bg-black bg-opacity-40 p-4 rounded-md sm:p-8" onClick={async()=>{
                             if(lock) return
                             lock=true

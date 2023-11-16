@@ -46,7 +46,6 @@ export const entriesRouter = createTRPCRouter({
         const questionsSet:Set<questionType> = new Set<questionType>()
         await Promise.all(rawQuestions.map(async (value)=>{
             const check = await ctx.db.select().from(EntriesToQuestions).where(eq(EntriesToQuestions.entryID, ctx.entry!.id))
-            console.log("🚀 ~ file: entries.ts:52 ~ awaitPromise.all ~ check:", check)
             if(check.some((val)=>val.questionID===value.id)) return;
             const answers = await ctx.db.select({id:Answers.id, value:Answers.value}).from(Answers).where(eq(Answers.questionID, value.id));
             const question:questionType = {
