@@ -42,7 +42,7 @@ export default function QuizPage() {
         if(!rs) toast.error("Coś jest nie tak z twoim quizem")
         if(rs) router.push('/end')
     }else{
-        setQuestion(rs)
+        setQuestion({...rs, answers: shuffle(rs.answers)})
         setTime(Date.now())
     }
   }
@@ -52,7 +52,6 @@ export default function QuizPage() {
   useEffect(()=>{
     if(!question) return
     setTimeRemaining(question.MaxTimeMs)
-    console.log("🚀 ~ file: page.tsx:39 ~ useEffect ~ MaxTimeMs:", question.MaxTimeMs)
     const interval = setInterval(()=>{
         setTimeRemaining((old)=>{
             const newTimeRemaining = old-1000
@@ -77,7 +76,7 @@ export default function QuizPage() {
                     {question.question}
                 </div>
                 <div className="grid grid-rows-4 grid-flow-col gap-6 p-4 md:grid-rows-2">
-                    {shuffle(question.answers).map((value, index)=>{
+                    {question.answers.map((value, index)=>{
                         return <button key={index} className="aspect-video bg-black bg-opacity-40 p-4 rounded-md sm:p-8" onClick={async()=>{
                             if(lock) return
                             lock=true

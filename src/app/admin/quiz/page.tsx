@@ -170,7 +170,7 @@ export default function AdminQuizPage() {
                                 <div className="col-span-3 flex justify-center ">
                                     <button className="bg-green-600 bg-opacity-70 rounded-md p-2 min-w-[50%] max-w-full" onClick={async()=>{
                                         const t = async()=>{
-                                            let rs = await api.questions.update.mutate({question: value.question, MaxPoints:value.MaxPoints, questionID:value.id})
+                                            let rs = await api.questions.update.mutate({question: value.question, MaxPoints:value.MaxPoints, questionID:value.id, MaxTimeMs:value.MaxTimeMs})
                                             await Promise.all(value.Answers.map(async(val)=>{
                                                 if(!await api.answers.update.mutate({answerID:val.id, update:{correct:val.correct, value:val.value}}))
                                                     rs = false
